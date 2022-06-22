@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const sprintf = require('sprintf-js').sprintf;
+const Promise = require('bluebird');
+
 
 var counter = 0;
 
@@ -24,6 +26,7 @@ const readCounter = (callback) => {
     }
   });
 };
+const readCounterAsync = Promise.promisify(readCounter);
 
 const writeCounter = (count, callback) => {
   var counterString = zeroPaddedNumber(count);
@@ -35,19 +38,36 @@ const writeCounter = (count, callback) => {
     }
   });
 };
+const writeCounterAsync = Promise.promisify(writeCounter);
+
 
 // Public API - Fix this function //////////////////////////////////////////////
+exports.getNextUniqueId = () => {
 
-exports.getNextUniqueId = (cb) => {
+  // attempt to read the file to see if it exists
+  //if it does exist, take the currentID and call writeCounter with currentID+1
+  return fs.promises.readFile(exports.counterFile, 'utf8')
+    .then(currentID => {
+      let newCount = zeroPaddedNumber(Number(currentID) + 1);
+      fs.promises.writeFile(exports.counterFile, newCount);
+      return newCount;
+    })
+    .catch(err => console.error(err));
+
+
+
+
+  // readCounter((err, count) => {
+  //   if (err) {
+  //     throw ('Error occurred');
+  //   } else {
+  //     writeCounter(count + 1, cb);
+  //   }
+  // });
+
+
   // counter = counter + 1;
   // return zeroPaddedNumber(counter);
-  readCounter((err, counter) => {
-    if (err) {
-      throw (`error ${err} has occurred`)
-    } else {
-      writeCounter(counter + 1, cb)
-    }
-  })
 };
 
 
